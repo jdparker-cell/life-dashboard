@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import AppShell from '@/components/AppShell';
 import BentoCard from '@/components/BentoCard';
 import Modal from '@/components/Modal';
@@ -53,6 +53,9 @@ export default function HealthPage() {
 
 function HealthDashboard() {
   const { data, addSupplement, updateSupplement, deleteSupplement, toggleSupplement, addWater, addSleep, deleteSleep, addCaffeine, deleteCaffeine, addReadiness } = useStore();
+  const hr = useRef(0);
+  hr.current++;
+  if (hr.current > 1) alert('HealthDashboard render #' + hr.current + ' supplements=' + data.supplements.length);
   const d = today();
   const [tab, setTab] = useState<'supplements' | 'water' | 'sleep' | 'caffeine' | 'readiness'>('supplements');
   const [supModal, setSupModal] = useState(false);
