@@ -285,7 +285,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     deleteSupplement: (id) => {
       const next = { ...data, supplements: data.supplements.filter(s => s.id !== id), supplementLogs: data.supplementLogs.filter(l => l.supplementId !== id) };
       saveToStorage(next);
-      window.location.reload();
+      if (hasSupabase && getUserId()) {
+        saveToCloud(next).then(() => window.location.reload());
+      } else {
+        window.location.reload();
+      }
     },
     toggleSupplement: (id, date) => mutate(d => {
       const existing = d.supplementLogs.find(l => l.supplementId === id && l.date === date);
