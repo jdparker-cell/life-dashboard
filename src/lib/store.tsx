@@ -186,7 +186,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           setCloudStatus('synced');
         } else {
           setData(stored);
-          doCloudSync(stored);
         }
         setLoaded(true);
       });
@@ -194,33 +193,26 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setData(stored);
       setLoaded(true);
     }
-  }, [doCloudSync]);
+  }, []);
+
+  useEffect(() => {
+    if (loaded && hasSupabase && getUserId()) {
+      doCloudSync(data);
+    }
+  }, [data, loaded, doCloudSync]);
 
   const persist = useCallback((newData: AppData) => {
     setData(newData);
     saveToStorage(newData);
-    doCloudSync(newData);
-  }, [doCloudSync]);
-
-  const updateField = useCallback(<K extends keyof AppData>(key: K, value: AppData[K]) => {
-    let next: AppData;
-    setData(prev => {
-      next = { ...prev, [key]: value };
-      saveToStorage(next);
-      return next;
-    });
-    doCloudSync(next!);
-  }, [doCloudSync]);
+  }, []);
 
   const mutate = useCallback((fn: (d: AppData) => AppData) => {
-    let next: AppData;
     setData(prev => {
-      next = fn(prev);
+      const next = fn(prev);
       saveToStorage(next);
       return next;
     });
-    doCloudSync(next!);
-  }, [doCloudSync]);
+  }, []);
 
   const handleSetSyncPassphrase = useCallback(async (passphrase: string) => {
     setPassphrase(passphrase);
