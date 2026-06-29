@@ -64,6 +64,7 @@ function HealthDashboard() {
   const [newCaf, setNewCaf] = useState({ drinkName: '', caffeineMg: 95, servingSize: '1 cup', timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }), isCustom: false });
   const [newReadiness, setNewReadiness] = useState({ sleepDuration: 0, sleepQuality: 0, caffeineMg: 0, waterProgress: 0, soreness: 5, mood: 7, stress: 4, energy: 7, focus: 7, state: 'neutral' as ReadinessLog['state'], notes: '' });
   const [showAllSupps, setShowAllSupps] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const waterLogs = data.waterLogs.filter(l => l.date === d);
   const waterTotal = waterLogs.reduce((s, l) => s + l.amount, 0);
@@ -225,7 +226,7 @@ function HealthDashboard() {
                         </div>
                         <div className="text-xs text-white/40">{s.dose}{s.unit} · {win.label}</div>
                       </div>
-                      <button onClick={() => deleteSupplement(s.id)} className="p-3 rounded-lg bg-white/5 text-red-400/50 hover:text-red-400">
+                      <button onClick={() => setDeleteConfirm(s.id)} className="p-3 rounded-lg bg-white/5 text-red-400/50 hover:text-red-400">
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                       </button>
                     </div>
@@ -281,6 +282,16 @@ function HealthDashboard() {
                 <textarea value={newSup.notes} onChange={e => setNewSup(p => ({ ...p, notes: e.target.value }))} />
               </div>
               <button onClick={handleAddSup} className="btn-primary w-full">Add Supplement</button>
+            </div>
+          </Modal>
+
+          <Modal open={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} title="Delete Supplement?">
+            <div className="space-y-4">
+              <p className="text-sm text-white/60">
+                Delete "{data.supplements.find(s => s.id === deleteConfirm)?.name}" and all its logs?
+              </p>
+              <button onClick={() => { deleteSupplement(deleteConfirm!); setDeleteConfirm(null); }} className="btn-danger w-full">Delete</button>
+              <button onClick={() => setDeleteConfirm(null)} className="btn-secondary w-full">Cancel</button>
             </div>
           </Modal>
         </>
