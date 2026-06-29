@@ -276,11 +276,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     addSupplement: (s) => mutate(d => ({ ...d, supplements: [...d.supplements, { ...s, id: generateId(), createdAt: today() }] })),
     updateSupplement: (id, updates) => mutate(d => ({ ...d, supplements: d.supplements.map(s => s.id === id ? { ...s, ...updates } : s) })),
     deleteSupplement: (id) => {
-      alert('deleteSupplement called with: ' + id);
-      const current = JSON.parse(localStorage.getItem('life-dashboard-data') || 'null');
-      alert('current supplements: ' + (current?.supplements?.length ?? 'no data'));
-      persist({ ...data, supplements: data.supplements.filter(s => s.id !== id), supplementLogs: data.supplementLogs.filter(l => l.supplementId !== id) });
-      alert('persist called');
+      setData(prev => {
+        const next = { ...prev, supplements: prev.supplements.filter(s => s.id !== id), supplementLogs: prev.supplementLogs.filter(l => l.supplementId !== id) };
+        return next;
+      });
     },
     toggleSupplement: (id, date) => mutate(d => {
       const existing = d.supplementLogs.find(l => l.supplementId === id && l.date === date);
