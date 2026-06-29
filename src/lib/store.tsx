@@ -203,21 +203,23 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [doCloudSync]);
 
   const updateField = useCallback(<K extends keyof AppData>(key: K, value: AppData[K]) => {
+    let next: AppData;
     setData(prev => {
-      const next = { ...prev, [key]: value };
+      next = { ...prev, [key]: value };
       saveToStorage(next);
-      doCloudSync(next);
       return next;
     });
+    doCloudSync(next!);
   }, [doCloudSync]);
 
   const mutate = useCallback((fn: (d: AppData) => AppData) => {
+    let next: AppData;
     setData(prev => {
-      const next = fn(prev);
+      next = fn(prev);
       saveToStorage(next);
-      doCloudSync(next);
       return next;
     });
+    doCloudSync(next!);
   }, [doCloudSync]);
 
   const handleSetSyncPassphrase = useCallback(async (passphrase: string) => {
