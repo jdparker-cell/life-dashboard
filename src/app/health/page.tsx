@@ -180,7 +180,7 @@ function HealthDashboard() {
             action={<button onClick={() => setSupModal(true)} className="text-xs text-cyan-400">+ Add</button>}
           >
             {data.supplements.length === 0 ? (
-              <div>
+              <div key="empty">
                 <p className="text-sm text-white/30 mb-3">No supplements tracked yet. Add from the common list or create custom.</p>
                 <div className="grid grid-cols-2 gap-1.5 max-h-60 overflow-y-auto">
                   {COMMON_SUPPLEMENTS.slice(0, showAllSupps ? COMMON_SUPPLEMENTS.length : 6).map(s => (
@@ -204,8 +204,8 @@ function HealthDashboard() {
                 )}
               </div>
             ) : (
-              <div className="space-y-2">
-                {data.supplements.map(s => {
+              <div key="list" className="space-y-2">
+                {data.supplements.length > 0 && data.supplements.map(s => {
                   const log = data.supplementLogs.find(l => l.supplementId === s.id && l.date === d);
                   const win = supplementSchedule[s.schedule] || { start: '07:00', end: '22:00' };
                   const now = new Date();

@@ -201,6 +201,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (loaded) {
+      saveToStorage(data);
+    }
+  }, [data, loaded]);
+
+  useEffect(() => {
     if (loaded && hasSupabase && getUserId()) {
       doCloudSync(data);
     }
