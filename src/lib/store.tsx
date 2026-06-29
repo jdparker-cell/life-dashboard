@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
 import { AppData, Supplement, WaterLog, SleepLog, CaffeineLog, Goal, Task, WorkoutSession, WorkoutSet, Exercise, WeightLog, ProgressPhoto, FinanceAccount, InvestmentHolding, CryptoHolding, OtherAsset, Subscription, Order, Receipt, WishlistItem, IncomeLog, NetWorthSnapshot, GymLocation, WorkoutSplit, SupplementLog, ReadinessLog, FoodEntry, MacroGoals } from './types';
 import { generateId, today } from './utils';
 import { createDemoData } from './demoData';
@@ -163,6 +163,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [synced, setSynced] = useState(false);
   const [cloudStatus, setCloudStatus] = useState<CloudStatus>('idle');
   const [syncPassphrase, setSyncPassphraseState] = useState<string | null>(null);
+  const renderCountRef = useRef(0);
+  renderCountRef.current++;
+  if (renderCountRef.current > 1) {
+    alert('StoreProvider RENDER #' + renderCountRef.current + ' supplements=' + data.supplements.length);
+  }
 
   const doCloudSync = useCallback(async (newData: AppData) => {
     if (!hasSupabase || !getUserId()) return;
