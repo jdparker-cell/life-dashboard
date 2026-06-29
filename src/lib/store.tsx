@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { AppData, Supplement, WaterLog, SleepLog, CaffeineLog, Goal, Task, WorkoutSession, WorkoutSet, Exercise, WeightLog, ProgressPhoto, FinanceAccount, InvestmentHolding, CryptoHolding, OtherAsset, Subscription, Order, Receipt, WishlistItem, IncomeLog, NetWorthSnapshot, GymLocation, WorkoutSplit, SupplementLog, ReadinessLog, FoodEntry, MacroGoals } from './types';
 import { generateId, today } from './utils';
 import { createDemoData } from './demoData';
@@ -163,11 +163,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [synced, setSynced] = useState(false);
   const [cloudStatus, setCloudStatus] = useState<CloudStatus>('idle');
   const [syncPassphrase, setSyncPassphraseState] = useState<string | null>(null);
-  const renderCountRef = useRef(0);
-  renderCountRef.current++;
-  if (renderCountRef.current > 1) {
-    alert('StoreProvider RENDER #' + renderCountRef.current + ' supplements=' + data.supplements.length);
-  }
+
 
   const doCloudSync = useCallback(async (newData: AppData) => {
     if (!hasSupabase || !getUserId()) return;
@@ -287,16 +283,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     addSupplement: (s) => mutate(d => ({ ...d, supplements: [...d.supplements, { ...s, id: generateId(), createdAt: today() }] })),
     updateSupplement: (id, updates) => mutate(d => ({ ...d, supplements: d.supplements.map(s => s.id === id ? { ...s, ...updates } : s) })),
     deleteSupplement: (id) => {
-      alert('before setData, data.supplements=' + data.supplements.length + ' expecting to remove ' + id);
-      setData(prev => {
-        alert('INSIDE setData callback! prev.supplements.length=' + prev.supplements.length + ' prev.supplements[0].id=' + (prev.supplements[0]?.id ?? 'none'));
-        const match = prev.supplements.find(s => s.id === id);
-        alert('match found: ' + (match ? 'YES - ' + match.name : 'NO'));
-        const next = { ...prev, supplements: prev.supplements.filter(s => s.id !== id), supplementLogs: prev.supplementLogs.filter(l => l.supplementId !== id) };
-        alert('next.supplements.length=' + next.supplements.length);
-        return next;
-      });
-      alert('after setData');
+      const next = { ...data, supplements: data.supplements.filter(s => s.id !== id), supplementLogs: data.supplementLogs.filter(l => l.supplementId !== id) };
+      saveToStorage(next);
+      setData(next);
     },
     toggleSupplement: (id, date) => mutate(d => {
       const existing = d.supplementLogs.find(l => l.supplementId === id && l.date === date);
