@@ -285,13 +285,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     deleteSupplement: (id) => {
       const next = { ...data, supplements: data.supplements.filter(s => s.id !== id), supplementLogs: data.supplementLogs.filter(l => l.supplementId !== id) };
       saveToStorage(next);
-      const verify = JSON.parse(localStorage.getItem('life-dashboard-data') || 'null');
-      alert('Saved to localStorage. Supplements count after save: ' + (verify?.supplements?.length ?? 'null') + ' Still has deleted: ' + (verify?.supplements?.some((s: any) => s.id === id) ?? 'null'));
-      if (hasSupabase && getUserId()) {
-        saveToCloud(next).then(() => { alert('Cloud save done'); window.location.reload(); });
-      } else {
-        window.location.reload();
-      }
+      setData(next);
     },
     toggleSupplement: (id, date) => mutate(d => {
       const existing = d.supplementLogs.find(l => l.supplementId === id && l.date === date);

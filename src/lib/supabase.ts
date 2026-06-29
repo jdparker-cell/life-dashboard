@@ -55,6 +55,8 @@ export async function loadFromCloud(): Promise<any | null> {
       .from('app_data')
       .select('data')
       .eq('user_id', userId)
+      .order('updated_at', { ascending: false })
+      .limit(1)
       .single();
     if (error || !data) return null;
     return data.data;
@@ -69,7 +71,7 @@ export async function saveToCloud(appData: any): Promise<boolean> {
   try {
     const { error } = await supabaseClient
       .from('app_data')
-      .upsert({ user_id: userId, data: appData, updated_at: new Date().toISOString() });
+      .upsert({ user_id: userId, data: appData, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
     return !error;
   } catch {
     return false;
