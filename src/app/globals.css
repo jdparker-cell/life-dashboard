@@ -26,12 +26,14 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
   input, textarea, select {
+    -webkit-appearance: none;
+    appearance: none;
     background: rgba(255,255,255,0.05);
     border: 1px solid rgba(255,255,255,0.08);
     border-radius: 12px;
     color: #fff;
     padding: 10px 14px;
-    font-size: 14px;
+    font-size: 16px;
     width: 100%;
     outline: none;
     transition: border-color 0.2s;

@@ -23,11 +23,11 @@ export default function Modal({ open, onClose, title, children, wide }: ModalPro
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className={`relative bg-zinc-900 border border-white/10 rounded-t-2xl sm:rounded-2xl max-h-[85vh] overflow-y-auto w-full ${
+      <div className={`relative bg-zinc-900 border border-white/10 rounded-2xl max-h-[90dvh] overflow-y-auto w-full ${
         wide ? 'max-w-lg' : 'max-w-md'
-      } shadow-2xl animate-slideUp px-5 pb-6 pt-4`}>
+      } shadow-2xl animate-slideUp px-5 pb-6 pb-safe pt-4 mx-3`}>
         {title && (
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-white">{title}</h2>
