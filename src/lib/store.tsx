@@ -4,7 +4,7 @@ import { createContext, useContext, useState, useEffect, useCallback, ReactNode 
 import { AppData, Supplement, WaterLog, SleepLog, CaffeineLog, Goal, Task, WorkoutSession, WorkoutSet, Exercise, WeightLog, ProgressPhoto, FinanceAccount, InvestmentHolding, CryptoHolding, OtherAsset, Subscription, Order, Receipt, WishlistItem, IncomeLog, NetWorthSnapshot, GymLocation, WorkoutSplit, SupplementLog, ReadinessLog, FoodEntry, MacroGoals } from './types';
 import { generateId, today } from './utils';
 import { createDemoData } from './demoData';
-import { hasSupabase, syncToSupabase, fetchFromSupabase } from './supabase';
+import { hasSupabase, getSyncPassphrase, setSyncPassphrase as setPassphrase, clearSyncPassphrase, getUserId, loadFromCloud, saveToCloud } from './supabase';
 
 const STORAGE_KEY = 'life-dashboard-data';
 const DEFAULT_MACRO_GOALS: MacroGoals = {
@@ -61,10 +61,16 @@ function saveToStorage(data: AppData): void {
   } catch {}
 }
 
+type CloudStatus = 'idle' | 'syncing' | 'synced' | 'error';
+
 interface StoreContextType {
   data: AppData;
   synced: boolean;
+  cloudStatus: CloudStatus;
   storageMode: 'local' | 'supabase';
+  syncPassphrase: string | null;
+  setSyncPassphrase: (passphrase: string) => Promise<void>;
+  clearSyncPassphrase: () => void;
   loadDemo: () => void;
   resetAll: () => void;
   exportData: () => string;
@@ -155,35 +161,85 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<AppData>(EMPTY_DATA);
   const [loaded, setLoaded] = useState(false);
   const [synced, setSynced] = useState(false);
+  const [cloudStatus, setCloudStatus] = useState<CloudStatus>('idle');
+  const [syncPassphrase, setSyncPassphraseState] = useState<string | null>(null);
+
+  const doCloudSync = useCallback(async (newData: AppData) => {
+    if (!hasSupabase || !getUserId()) return;
+    setCloudStatus('syncing');
+    const ok = await saveToCloud(newData);
+    setSynced(ok);
+    setCloudStatus(ok ? 'synced' : 'error');
+  }, []);
 
   useEffect(() => {
     const stored = loadFromStorage();
-    setData(stored);
-    setLoaded(true);
-  }, []);
+    const existingPassphrase = getSyncPassphrase();
+    setSyncPassphraseState(existingPassphrase);
+
+    if (hasSupabase && existingPassphrase) {
+      loadFromCloud().then(cloudData => {
+        if (cloudData) {
+          setData(cloudData);
+          saveToStorage(cloudData);
+          setSynced(true);
+          setCloudStatus('synced');
+        } else {
+          setData(stored);
+          doCloudSync(stored);
+        }
+        setLoaded(true);
+      });
+    } else {
+      setData(stored);
+      setLoaded(true);
+    }
+  }, [doCloudSync]);
 
   const persist = useCallback((newData: AppData) => {
     setData(newData);
     saveToStorage(newData);
-    if (hasSupabase) {
-      syncToSupabase('app_data', newData).then(setSynced);
-    }
-  }, []);
+    doCloudSync(newData);
+  }, [doCloudSync]);
 
   const updateField = useCallback(<K extends keyof AppData>(key: K, value: AppData[K]) => {
     setData(prev => {
       const next = { ...prev, [key]: value };
       saveToStorage(next);
+      doCloudSync(next);
       return next;
     });
-  }, []);
+  }, [doCloudSync]);
 
   const mutate = useCallback((fn: (d: AppData) => AppData) => {
     setData(prev => {
       const next = fn(prev);
       saveToStorage(next);
+      doCloudSync(next);
       return next;
     });
+  }, [doCloudSync]);
+
+  const handleSetSyncPassphrase = useCallback(async (passphrase: string) => {
+    setPassphrase(passphrase);
+    setSyncPassphraseState(passphrase);
+    setCloudStatus('syncing');
+    const cloudData = await loadFromCloud();
+    if (cloudData) {
+      setData(cloudData);
+      saveToStorage(cloudData);
+      setSynced(true);
+      setCloudStatus('synced');
+    } else {
+      doCloudSync(data);
+    }
+  }, [data, doCloudSync]);
+
+  const handleClearSyncPassphrase = useCallback(() => {
+    clearSyncPassphrase();
+    setSyncPassphraseState(null);
+    setSynced(false);
+    setCloudStatus('idle');
   }, []);
 
   if (!loaded) {
@@ -193,7 +249,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const ctx: StoreContextType = {
     data,
     synced,
+    cloudStatus,
     storageMode: hasSupabase ? 'supabase' : 'local',
+    syncPassphrase,
+    setSyncPassphrase: handleSetSyncPassphrase,
+    clearSyncPassphrase: handleClearSyncPassphrase,
     loadDemo: () => persist(createDemoData()),
     resetAll: () => persist(JSON.parse(JSON.stringify(EMPTY_DATA))),
     exportData: () => JSON.stringify(data, null, 2),

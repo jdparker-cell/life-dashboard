@@ -382,6 +382,14 @@ CREATE TABLE IF NOT EXISTS mentor_settings (
   UNIQUE(user_id)
 );
 
+-- App data blob (for cross-device sync)
+CREATE TABLE IF NOT EXISTS app_data (
+  user_id TEXT PRIMARY KEY,
+  data JSONB NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE app_data DISABLE ROW LEVEL SECURITY;
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_goals_user ON goals(user_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_user_date ON tasks(user_id, date);

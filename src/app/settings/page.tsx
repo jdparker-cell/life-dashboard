@@ -16,7 +16,8 @@ export default function SettingsPage() {
 }
 
 function SettingsDashboard() {
-  const { data, updateProfile, updateMentorSettings, updateMacroGoals, loadDemo, resetAll, exportData, importData } = useStore();
+  const { data, updateProfile, updateMentorSettings, updateMacroGoals, loadDemo, resetAll, exportData, importData, syncPassphrase, setSyncPassphrase, clearSyncPassphrase, cloudStatus } = useStore();
+  const [passphraseInput, setPassphraseInput] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importStatus, setImportStatus] = useState('');
   const [showResetModal, setShowResetModal] = useState(false);
@@ -213,21 +214,91 @@ function SettingsDashboard() {
         </div>
       </BentoCard>
 
-      {/* Sync & Storage */}
-      <BentoCard title="Sync & Storage">
+      {/* Cloud Sync */}
+      <BentoCard title="Cloud Sync">
         <div className="space-y-3">
-          <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
-            <div className={`w-2 h-2 rounded-full ${hasSupabase ? 'bg-emerald-400' : 'bg-amber-400'}`} />
-            <div>
-              <div className="text-sm text-white">{hasSupabase ? 'Supabase Connected' : 'Local-Only Mode'}</div>
-              <div className="text-xs text-white/40">
-                {hasSupabase
-                  ? 'Data is synced to Supabase when available.'
-                  : 'All data stored in localStorage. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to enable sync.'}
+          {!hasSupabase && (
+            <div className="p-3 rounded-xl bg-amber-400/10 border border-amber-400/20">
+              <div className="text-xs text-amber-400/80">
+                Supabase not configured. Set <code className="text-white/60">NEXT_PUBLIC_SUPABASE_URL</code> and{' '}
+                <code className="text-white/60">NEXT_PUBLIC_SUPABASE_ANON_KEY</code> as Vercel environment variables to enable cloud sync.
               </div>
             </div>
-          </div>
+          )}
 
+          {hasSupabase && (
+            <>
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+                <div className={`w-2 h-2 rounded-full ${cloudStatus === 'synced' ? 'bg-emerald-400' : cloudStatus === 'error' ? 'bg-red-400' : cloudStatus === 'syncing' ? 'bg-yellow-400' : 'bg-amber-400'}`} />
+                <div>
+                  <div className="text-sm text-white">
+                    {cloudStatus === 'synced' ? 'Synced to Cloud' :
+                     cloudStatus === 'syncing' ? 'Syncing...' :
+                     cloudStatus === 'error' ? 'Sync Error' :
+                     syncPassphrase ? 'Ready to Sync' : 'Cloud Disconnected'}
+                  </div>
+                  <div className="text-xs text-white/40">
+                    {cloudStatus === 'synced' ? 'All changes are synced across devices.' :
+                     cloudStatus === 'syncing' ? 'Saving changes to the cloud...' :
+                     cloudStatus === 'error' ? 'Failed to sync. Check your connection.' :
+                     syncPassphrase ? 'Enter your passphrase to enable sync.' :
+                     'Set a sync passphrase to share data between devices.'}
+                  </div>
+                </div>
+              </div>
+
+              {syncPassphrase ? (
+                <div className="space-y-2">
+                  <div className="text-xs text-white/40">Connected with passphrase</div>
+                  <div className="flex gap-2">
+                    <input
+                      type="password"
+                      value={passphraseInput}
+                      onChange={e => setPassphraseInput(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter' && passphraseInput) { setSyncPassphrase(passphraseInput); setPassphraseInput(''); } }}
+                      placeholder="Change passphrase..."
+                      className="flex-1"
+                    />
+                    <button
+                      onClick={() => { setSyncPassphrase(passphraseInput); setPassphraseInput(''); }}
+                      disabled={!passphraseInput}
+                      className="btn-secondary text-xs"
+                    >
+                      Update
+                    </button>
+                  </div>
+                  <button onClick={clearSyncPassphrase} className="btn-danger text-xs">Disconnect Cloud Sync</button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="text-xs text-white/40">Set a passphrase to sync across your devices. Use the same passphrase on each device.</div>
+                  <div className="flex gap-2">
+                    <input
+                      type="password"
+                      value={passphraseInput}
+                      onChange={e => setPassphraseInput(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter' && passphraseInput) { setSyncPassphrase(passphraseInput); setPassphraseInput(''); } }}
+                      placeholder="Enter sync passphrase..."
+                      className="flex-1"
+                    />
+                    <button
+                      onClick={() => { setSyncPassphrase(passphraseInput); setPassphraseInput(''); }}
+                      disabled={!passphraseInput}
+                      className="btn-primary text-xs"
+                    >
+                      Connect
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </BentoCard>
+
+      {/* Backup */}
+      <BentoCard title="Backup">
+        <div className="space-y-3">
           <div className="flex flex-wrap gap-2">
             <button onClick={handleExport} className="btn-secondary text-xs">Export Backup</button>
             <button onClick={handleImport} className="btn-secondary text-xs">Import Backup</button>
