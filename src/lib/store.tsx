@@ -276,11 +276,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     addSupplement: (s) => mutate(d => ({ ...d, supplements: [...d.supplements, { ...s, id: generateId(), createdAt: today() }] })),
     updateSupplement: (id, updates) => mutate(d => ({ ...d, supplements: d.supplements.map(s => s.id === id ? { ...s, ...updates } : s) })),
     deleteSupplement: (id) => {
-      setData(prev => {
-        const next = { ...prev, supplements: prev.supplements.filter(s => s.id !== id), supplementLogs: prev.supplementLogs.filter(l => l.supplementId !== id) };
-        saveToStorage(next);
-        return next;
-      });
+      const next = { ...data, supplements: data.supplements.filter(s => s.id !== id), supplementLogs: data.supplementLogs.filter(l => l.supplementId !== id) };
+      persist(next);
     },
     toggleSupplement: (id, date) => mutate(d => {
       const existing = d.supplementLogs.find(l => l.supplementId === id && l.date === date);
