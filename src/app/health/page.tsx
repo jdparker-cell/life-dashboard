@@ -290,7 +290,7 @@ function HealthDashboard() {
               <p className="text-sm text-white/60">
                 Delete "{data.supplements.find(s => s.id === deleteConfirm)?.name}" and all its logs?
               </p>
-              <button onClick={() => { deleteSupplement(deleteConfirm!); setDeleteConfirm(null); }} className="btn-danger w-full">Delete</button>
+              <button onClick={() => { const id = deleteConfirm; setDeleteConfirm(null); if (id) deleteSupplement(id); }} className="btn-danger w-full">Delete</button>
               <button onClick={() => setDeleteConfirm(null)} className="btn-secondary w-full">Cancel</button>
             </div>
           </Modal>
